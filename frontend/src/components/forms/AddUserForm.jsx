@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 const AddUserForm = ({ isOpen, onClose, onSubmit }) => {
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+  const [isActive, setIsActive] = useState(true);
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
     defaultValues: {
       name: '',
       email: '',
@@ -16,6 +17,12 @@ const AddUserForm = ({ isOpen, onClose, onSubmit }) => {
 
   const handleFormSubmit = (data) => {
     onSubmit(data);
+  };
+
+  const handleToggleStatus = () => {
+    const newStatus = !isActive;
+    setIsActive(newStatus);
+    setValue('status', newStatus ? 'active' : 'inactive');
   };
 
   return (
@@ -101,19 +108,25 @@ const AddUserForm = ({ isOpen, onClose, onSubmit }) => {
             <div className="flex-1">
               <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Account Status</label>
               <div className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2.5">
-                <span className="text-sm text-gray-900 font-medium">Active</span>
-                <input 
-                  type="checkbox" 
-                  {...register('status')}
-                  className="sr-only"
-                  id="status-toggle"
-                />
-                <label 
-                  htmlFor="status-toggle"
-                  className="w-10 h-6 bg-gray-300 rounded-full flex items-center px-1 cursor-pointer"
+                <span className="text-sm text-gray-900 font-medium">{isActive ? 'Active' : 'Inactive'}</span>
+                <button
+                  type="button"
+                  onClick={handleToggleStatus}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    isActive ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
                 >
-                  <div className="bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform"></div>
-                </label>
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      isActive ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <input 
+                  type="hidden" 
+                  {...register('status')}
+                  value={isActive ? 'active' : 'inactive'}
+                />
               </div>
             </div>
           </div>
