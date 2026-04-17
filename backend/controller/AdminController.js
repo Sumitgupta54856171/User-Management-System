@@ -152,7 +152,59 @@ const deleteUser = async (req, res) => {
 };
 
 // ==========================
-// 4. GET ALL USERS
+// 4. UPDATE PROFILE (User can update their own profile)
+// ==========================
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id; // Get current user's ID from auth middleware
+    let updateData = req.body;
+    console.log('Updating profile for user ID:', userId, 'with data:', updateData);
+
+    // Get the current user
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Users can only update their own name and email
+    // They cannot change their role or status through profile update
+    const allowedUpdates = ['name', 'email'];
+    const actualUpdateData = {};
+    
+    for (const key of allowedUpdates) {
+      if (updateData[key] !== undefined) {
+        actualUpdateData[key] = updateData[key];
+      }
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (actualUpdateData.email && actualUpdateData.email !== currentUser.email) {
+      const existingUser = await User.findOne({ email: actualUpdateData.email });
+      if (existingUser) {
+        return res.status(400).json({ success: false, message: 'Email already exists' });
+      }
+    }
+
+    actualUpdateData.updatedBy = userId;
+
+    const updatedUser = await User.findByIdAndUpdate(userId, actualUpdateData, { 
+      new: true, 
+      runValidators: true 
+    }).select('-password'); // Exclude password from response
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: updatedUser
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error updating profile: ' + error.message });
+  }
+};
+
+// ==========================
+// 5. GET ALL USERS
 // ==========================
 const getAllUsers = async (req, res) => {
   try {
@@ -170,5 +222,6 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
+  updateProfile,
   getAllUsers
 };

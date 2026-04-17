@@ -5,8 +5,7 @@ const {protect} = require('../middleware/authMiddleware')
 
 const AdminController = require('../controller/AdminController')
 const {authorizeRoles} = require('../middleware/rolecheckMiddleware')
-const { createUser, updateUser, deleteUser, getAllUsers } = AdminController;
-const { updateProfile } = require('../controller/UserController');
+const { createUser, updateUser, deleteUser, getAllUsers, updateProfile } = AdminController;
 
 router.delete(
   '/:id', 
