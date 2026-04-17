@@ -6,14 +6,7 @@ const {protect} = require('../middleware/authMiddleware')
 const AdminController = require('../controller/AdminController')
 const {authorizeRoles} = require('../middleware/rolecheckMiddleware')
 const { createUser, updateUser, deleteUser, getAllUsers } = AdminController;
-const { updateProfile } = require('../controller/UserController');
-
-router.delete(
-  '/:id', 
-  protect, 
-  authorizeRoles('Admin', 'Manager'), 
-  deleteUser
-);
+const { updateProfile, updateBasicDetails } = require('../controller/UserController');
 
 router.post(
   '/add', 
@@ -21,6 +14,9 @@ router.post(
   authorizeRoles('Admin'), 
   createUser
 );
+
+router.put('/profile', protect, updateProfile);
+router.put('/:id/basic', protect, updateBasicDetails);
 
 router.get(
   '/', 
@@ -36,6 +32,11 @@ router.put(
   updateUser
 );
 
-router.put('/profile', protect, updateProfile);
+router.delete(
+  '/:id', 
+  protect, 
+  authorizeRoles('Admin', 'Manager'), 
+  deleteUser
+);
 
 module.exports = router;

@@ -15,8 +15,7 @@ app.use(express.json())
 app.use(cors())
 
 app.post('/login',LoginController.loginUser)
-app.use('/users', userRouter); // Use the router for /users routes
-// app.put('/users/:id', updateBasicDetails); // Remove this as it's now in the router
+app.use('/users', userRouter);
 
 const port = 3000;
 

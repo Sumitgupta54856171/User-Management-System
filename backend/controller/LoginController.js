@@ -8,7 +8,6 @@ exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
     console.log('Login attempt with email:', req.body);
 
-    // 1. Check if email and password are provided
     if (!email || !password) {
       return res.status(400).json({ 
         success: false, 
@@ -32,7 +31,6 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    // 4. Verify password using bcrypt
     const isMatch = await bcrypt.compare(password, user.password);
     
     if (!isMatch) {
@@ -42,18 +40,15 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    // 5. Generate JWT Token
-    // Token payload me hum user ki ID aur Role daal rahe hain (RBAC ke liye zaroori hai)
     const payload = {
       id: user._id,
       role: user.role
     };
 
-    // process.env.JWT_SECRET me apna secret key define karna na bhoolein
     const token = jwt.sign(
       payload, 
       process.env.JWT_SECRET || 'fallback_secret_key_for_dev', 
-      { expiresIn: '1d' } // Token 1 din ke liye valid rahega
+      { expiresIn: '1d' }
     );
 
     const userData = {
