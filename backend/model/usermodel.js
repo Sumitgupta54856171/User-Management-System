@@ -45,20 +45,12 @@ const UserSchema = mongodb.Schema({
     timestamps: true, 
 }
 )
-userSchema.index({ email: 1 }, { unique: true });
+UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.methods.toJSON= function(){
-    const user = this.Object();
+    const user = this.toObject();
     delete user.password;
     return user;
 }
-userSchema.pre('save', async function(next) {
-    if(!this.isModified('password'))  return next();
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-});
-userSchema.methods.comparePassword = async function(password) {
-    return await bcrypt.compare(password, this.password);
-}
+
 
 module.exports = mongodb.model('user_detail',UserSchema)

@@ -1,10 +1,10 @@
 import {createApi,fetchBaseQuery} from '@reduxjs/toolkit/query/react';
-import { setCredentials, logout } from './authSlice';
+import { setCredentials } from './authSlice';
 
 const baseQuery = fetchBaseQuery({
     baseUrl:"http://localhost:3000",
     prepareHeaders: (headers, { getState }) => {
-        const token = (getState() as any).auth.token;
+        const token = getState().auth.token;
         if (token) {
             headers.set('authorization', `Bearer ${token}`);
         }
@@ -12,18 +12,9 @@ const baseQuery = fetchBaseQuery({
     },
 });
 
-const baseQueryWithReauth = async (args, api, extraOptions) => {
-    let result = await baseQuery(args, api, extraOptions);
-    if (result.error && result.error.status === 401) {
-        // Token expired, logout
-        api.dispatch(logout());
-    }
-    return result;
-};
-
 export const api = createApi({
     reducerPath:'api',
-    baseQuery: baseQueryWithReauth,
+    baseQuery: baseQuery,
     endpoints:(builder)=>({
         login: builder.mutation({
             query: (credentials) => ({
@@ -36,7 +27,7 @@ export const api = createApi({
                     const { data } = await queryFulfilled;
                     dispatch(setCredentials({ user: data.user, token: data.token }));
                 } catch (error) {
-                    // Handle login error
+                    // Login failed, no auth state will be set
                 }
             },
         }),

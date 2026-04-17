@@ -1,19 +1,31 @@
 
 
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
-
+import { useNavigate } from 'react-router-dom';
+import { useLoginMutation } from '../../store/api';
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const [login, { isLoading, error }] = useLoginMutation();
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm();
 
-  const onSubmit = async () => {
-    console.log(data);
-    const responese = await axios.post('/api/login',data)
+  const onSubmit = async (data) => {
+    try {
+      const response = await login(data).unwrap();
+      const role = response?.user?.role;
+      if (role === 'admin') {
+        navigate('/users');
+      } else {
+        navigate('/profile');
+      }
+    } catch (err) {
+      console.error('Login failed:', err);
+    }
   };
 
   return (
@@ -71,6 +83,10 @@ export default function LoginPage() {
             )}
           </div>
 
+          {error && (
+            <p className="text-red-600 text-sm">Login failed. Please check your credentials.</p>
+          )}
+
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
@@ -91,10 +107,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isLoading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? "Logging in..." : "Login"}
+            {isLoading ? "Logging in..." : "Login"}
           </button>
 
           <div className="text-center mt-4">

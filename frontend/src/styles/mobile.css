@@ -1,0 +1,12 @@
+/* Mobile Layout Fixes */
+@media (max-width: 767px) {
+  [data-mobile-hidden="true"] {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  [data-mobile-hidden="true"] {
+    display: flex !important;
+  }
+}
