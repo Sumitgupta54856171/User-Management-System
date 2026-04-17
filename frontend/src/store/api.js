@@ -2,7 +2,7 @@ import {createApi,fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import { setCredentials } from './authSlice';
 
 const baseQuery = fetchBaseQuery({
-    baseUrl:process.env.base_url,
+    baseUrl:'https://51-81-22-42.nip.io/',
     prepareHeaders: (headers, { getState }) => {
         const token = getState().auth.token;
         if (token) {
