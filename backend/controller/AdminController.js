@@ -7,32 +7,27 @@ const createUser = async (req, res) => {
     const { name, email, password, role, status } = req.body;
     console.log('Creating user with data:', req.body);
 
-    // Check agar user pehle se exist karta hai
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already exists' });
     }
 
-    // Password Hash karna
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Naya user create karna
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
       role: role || 'User',
       status: status || 'active',
-      createdBy: req.user ? req.user.id : null // Agar admin logged in hai
+      createdBy: req.user ? req.user.id : null
     });
 
-    // Email bhejne ka logic (optional - agar fail ho toh user creation rokna nahi)
     try {
       const emailSubject = 'Welcome to Our Platform - Your Account Details';
       const emailText = `Hello ${name},\n\nYour account has been successfully created. Here are your login details:\n\nName: ${name}\nEmail: ${email}\nRole: ${role || 'User'}\nPassword: ${password}\n\nPlease log in and change your password as soon as possible for security reasons.\n\nThanks!`;
       
-      // sendEmail function me 'otp' parameter null bhej rahe hain kyunki yahan zaroorat nahi hai
       await sendEmail(email, null, emailSubject, emailText);
       
       res.status(201).json({
@@ -54,22 +49,17 @@ const createUser = async (req, res) => {
   }
 };
 
-// ==========================
-// 2. UPDATE USER
-// ==========================
 const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
     let updateData = req.body;
     console.log('Updating user with ID:', userId, 'and data:', updateData);
 
-    // Get the user being updated
     const userToUpdate = await User.findById(userId);
     if (!userToUpdate) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Check if the current user is a manager and trying to update an admin
     if (req.user.role === 'Manager' && userToUpdate.role === 'Admin') {
       return res.status(403).json({ 
         success: false, 
@@ -77,7 +67,6 @@ const updateUser = async (req, res) => {
       });
     }
 
-    // Managers cannot change user roles to Admin
     if (req.user.role === 'Manager' && updateData.role === 'Admin') {
       return res.status(403).json({ 
         success: false, 
@@ -85,7 +74,6 @@ const updateUser = async (req, res) => {
       });
     }
 
-    // Agar update me naya password aa raha hai, toh use bhi hash karna padega
     if (updateData.password) {
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(updateData.password, salt);
@@ -109,21 +97,16 @@ const updateUser = async (req, res) => {
   }
 };
 
-// ==========================
-// 3. DELETE USER
-// ==========================
 const deleteUser = async (req, res) => {
   try {
     const userId = req.params.id;
     console.log('Deleting user with ID:', userId);
 
-    // Get the user being deleted
     const userToDelete = await User.findById(userId);
     if (!userToDelete) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Check if the current user is a manager and trying to delete an admin
     if (req.user.role === 'Manager' && userToDelete.role === 'Admin') {
       return res.status(403).json({ 
         success: false, 
@@ -131,7 +114,6 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    // Prevent users from deleting themselves
     if (userId === req.user.id) {
       return res.status(403).json({ 
         success: false, 
@@ -151,64 +133,9 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// ==========================
-// 4. UPDATE PROFILE (User can update their own profile)
-// ==========================
-const updateProfile = async (req, res) => {
-  try {
-    const userId = req.user.id; // Get current user's ID from auth middleware
-    let updateData = req.body;
-    console.log('Updating profile for user ID:', userId, 'with data:', updateData);
-
-    // Get the current user
-    const currentUser = await User.findById(userId);
-    if (!currentUser) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    // Users can only update their own name and email
-    // They cannot change their role or status through profile update
-    const allowedUpdates = ['name', 'email'];
-    const actualUpdateData = {};
-    
-    for (const key of allowedUpdates) {
-      if (updateData[key] !== undefined) {
-        actualUpdateData[key] = updateData[key];
-      }
-    }
-
-    // Check if email is being changed and if it's already taken
-    if (actualUpdateData.email && actualUpdateData.email !== currentUser.email) {
-      const existingUser = await User.findOne({ email: actualUpdateData.email });
-      if (existingUser) {
-        return res.status(400).json({ success: false, message: 'Email already exists' });
-      }
-    }
-
-    actualUpdateData.updatedBy = userId;
-
-    const updatedUser = await User.findByIdAndUpdate(userId, actualUpdateData, { 
-      new: true, 
-      runValidators: true 
-    }).select('-password'); // Exclude password from response
-
-    res.status(200).json({
-      success: true,
-      message: 'Profile updated successfully',
-      data: updatedUser
-    });
-
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Error updating profile: ' + error.message });
-  }
-};
-
-// ==========================
-// 5. GET ALL USERS
-// ==========================
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}, '-password'); // Password exclude karo
+    const users = await User.find({}, '-password');
     res.status(200).json({
       success: true,
       data: users
@@ -222,6 +149,5 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
-  updateProfile,
   getAllUsers
 };
